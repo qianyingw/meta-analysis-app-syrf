@@ -592,9 +592,9 @@ shinyServer(function(input, output, session) {
     
     
     if (input$DataType == "pre") { 
-      stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
-           Please select nested data in the first tab.")
-      # yivi <- record() 
+      # stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
+      #      Please select nested data in the first tab.")
+      yivi <- record()
     }
     
     summary(metagen(TE = ES, seTE = SE, data = yivi,
@@ -609,9 +609,9 @@ shinyServer(function(input, output, session) {
     if (input$DataType == "nest") { yivi <- nest()}
     
     if (input$DataType == "pre") { 
-      stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
-           Please select nested data in the first tab.")
-      # yivi <- record() 
+      # stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
+      #      Please select nested data in the first tab.")
+      yivi <- record()
     }
     
     dlab = input$dbox   # discrete variables selected
@@ -669,9 +669,9 @@ shinyServer(function(input, output, session) {
     if (input$DataType == "nest") { yivi <- nest() }
     
     if (input$DataType == "pre") { 
-      stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
-           Please select nested data in the first tab.")
-      # yivi <- record() 
+      # stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
+      #      Please select nested data in the first tab.")
+      yivi <- record()
     }
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
@@ -743,9 +743,9 @@ shinyServer(function(input, output, session) {
     # if (input$DataType == "pre") { yivi <- record() }
     if (input$DataType == "nest") { yivi <- nest()}
     if (input$DataType == "pre") { 
-      stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
-           Please select nested data in the first tab.")
-      # yivi <- record() 
+      # stop("Pre-nested data shouldn't be used for heterogeneity analysis. 
+      #      Please select nested data in the first tab.")
+      yivi <- record()
     }
     
     lab = input$con.regplot          # Name of the continuous variable
@@ -1318,7 +1318,7 @@ shinyServer(function(input, output, session) {
               mode = "markers",
               marker = list(color = input$EggerPtCol),
               showlegend = F, name = "Observed") %>%
-    
+      
       layout(
         xaxis = list(title = input$EggerXlab,
                      showgrid = F, showline = T,
