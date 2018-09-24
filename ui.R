@@ -25,11 +25,15 @@ shinyUI(fluidPage(
   
   sidebarLayout(
     sidebarPanel(
+      fileInput(inputId = "file", label = "Upload CSV File",
+                accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")
+      ),
+      
       radioButtons(inputId = "CompareType", label = "Select comparison",
                    choices = list("Analysis of model" = "SC", 
                                   "Analysis of intervention" = "SCT"), 
                    selected = "SC"),
-      hr(),
+      hr(),  
       radioButtons(inputId = "EffectMeasure", label = "Select effect size measure",
                    choices = list("Normalised mean difference" = "NMD", 
                                   "Standardised mean difference" = "SMD",
@@ -69,7 +73,7 @@ shinyUI(fluidPage(
                               radioButtons(inputId = "DataType", label = "Select data you want to use for analysis",
                                            choices = list("Pre-nested data" = "pre", 
                                                           "Data nested by outcome" = "nest"
-                                                          ), 
+                                           ), 
                                            selected = "pre")
                        ),
                        column(6,
@@ -122,12 +126,12 @@ shinyUI(fluidPage(
                                        colourInput(inputId = "ForDiaCol", label = "Diamond color", value = "#56B4E9")
                                 )
                               ),
-
+                              
                               sliderInput(inputId = "GapRight", label = "Right gap", min = 0, max = 10, value = 1),
                               sliderInput(inputId = "ForWinHeight", label = "Figure height (px)", min = 300, max = 2000, value = 400),
-
+                              
                               HTML("<br><br>"),
-
+                              
                               fluidRow(
                                 column(6,
                                        checkboxInput("ShowWeight", label = "Show weight", value = T)
@@ -142,7 +146,7 @@ shinyUI(fluidPage(
                    plotOutput("ForestPlot")
                  )
         ),
-
+        
         tabPanel("Heterogeneity",
                  verticalLayout(
                    wellPanel(
@@ -164,9 +168,9 @@ shinyUI(fluidPage(
                                     verbatimTextOutput("RegOutput") )
                  )
         ),
-
-
-
+        
+        
+        
         tabPanel("Heterogeneity plot",
                  verticalLayout(
                    # subgroup forest plot
@@ -183,15 +187,15 @@ shinyUI(fluidPage(
                                                fluidRow(
                                                  column(4,
                                                         textInput(inputId = "SubXlab", label = "Label of x-axis", value = "Effect & REML")
-                                                        ),
+                                                 ),
                                                  column(4,
                                                         colourInput(inputId = "SubSqCol", label = "Square color", value = "#E69F00")
-                                                        ),
+                                                 ),
                                                  column(4,
                                                         colourInput(inputId = "SubDiaCol", label = "Diamond color", value = "#56B4E9")
-                                                        )
+                                                 )
                                                ),
-
+                                               
                                                sliderInput(inputId = "SubGapRight", label = "Right gap", min = 0, max = 10, value = 1),
                                                sliderInput(inputId = "SubWinHeight", label = "Height (px)", min = 400, max = 2000, value = 400),
                                                HTML("<br><br>"),
@@ -206,13 +210,13 @@ shinyUI(fluidPage(
                                                         downloadButton(outputId = "DownSubForest", label = "Download forest plot")
                                                  )
                                                )
-
+                                               
                                         )
                                       ) # fluidRow
                                     ) # wellPanel
                    ), # conditionPanel
-
-
+                   
+                   
                    HTML("<br>"),
                    # meta-regression plot
                    conditionalPanel(condition = "input.HetMethod == 'reg'",
@@ -246,14 +250,14 @@ shinyUI(fluidPage(
                                     ) # wellPanel
                    ), # conditionPanel
                    HTML("<br>"),
-
-                 conditionalPanel(condition = "input.HetMethod == 'sub'",
-                                  plotOutput("SubForest") ),
-                 conditionalPanel(condition = "input.HetMethod == 'reg'",
-                                  plotlyOutput("RegPlot") )
+                   
+                   conditionalPanel(condition = "input.HetMethod == 'sub'",
+                                    plotOutput("SubForest") ),
+                   conditionalPanel(condition = "input.HetMethod == 'reg'",
+                                    plotlyOutput("RegPlot") )
                  )
         ),
-
+        
         tabPanel("Bar plot",
                  verticalLayout(
                    wellPanel(
@@ -294,9 +298,9 @@ shinyUI(fluidPage(
                    plotOutput("BarPlot")
                  )
         ),
-
-
-
+        
+        
+        
         tabPanel("Trim and Fill",
                  verticalLayout(
                    verbatimTextOutput("TafOutput"),
@@ -307,12 +311,12 @@ shinyUI(fluidPage(
                                            choices = list("Inverse of the standard error" = "seinv",
                                                           "Inverse of the square-root sample size" = "sqrtninv"),
                                            selected = "seinv"),
-
+                              
                               radioButtons(inputId = "TafFill", label = "Select funnel plot type",
                                            choices = list("Show imputed studies" = "Yes",
                                                           "Show only published studies" = "No"),
                                            selected = "Yes"),
-
+                              
                               radioButtons(inputId = "TafSide", label = "Side of funnel plot the missing studies imputed",
                                            choices = list("Left" = "left",
                                                           "Right" = "right"),
@@ -331,18 +335,18 @@ shinyUI(fluidPage(
                               sliderInput(inputId = "FunnelWidth", label = "Width (px)", min = 300, max = 1200, value = 600),
                               sliderInput(inputId = "FunnelHeight", label = "Height (px)", min = 300, max = 1200, value = 400)
                               # HTML("<br><br>"),
-
+                              
                        )
                      )
                    ),
                    plotOutput("FunnelPlot")
                  )
         ),
-
-
-
-
-
+        
+        
+        
+        
+        
         tabPanel("Egger's Regression",
                  wellPanel(
                    fluidRow(
@@ -382,7 +386,3 @@ shinyUI(fluidPage(
     ) # mainPanel 
   ) # sidebarLayout
 ))
-
-
-
-
