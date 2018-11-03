@@ -2,7 +2,7 @@
 # This is a Shiny web application for meta-analysis in SyRF
 # by Qianying Wang @CAMARADES
 # server.R
-# https://qianying.shinyapps.io/Meta/
+# https://camarades.shinyapps.io/meta-analysis-syrf/
 
 library(shiny)
 library(metafor)
