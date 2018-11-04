@@ -471,7 +471,7 @@ shinyServer(function(input, output, session) {
     # summary(metagen(Effect.Size, Standard.Error, data=yv, method.tau=input$meth))
     # summary(metagen(TE = ES, seTE = SE, data=yivi, method.tau="REML"))
     summary(metagen(TE = ES, seTE = SE, data = yivi,
-                    method.tau = input$HetEstimator))
+                    method.tau = input$HetEstimator, hakn = T))
   })
   
   # ----------------- Forest plot ----------------------
@@ -482,7 +482,7 @@ shinyServer(function(input, output, session) {
     # if (is.null(yivi)) { stop("No data submitted.") }
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
-                   method.tau = input$HetEstimator, comb.fixed = F)
+                   method.tau = input$HetEstimator, comb.fixed = F, hakn = T)
     
     if (input$ForOrder == "") { sortlab = NULL }
     if (input$ForOrder == "ine") { sortlab = res$TE }
@@ -599,7 +599,7 @@ shinyServer(function(input, output, session) {
     
     summary(metagen(TE = ES, seTE = SE, data = yivi,
                     method.tau = input$HetEstimator,
-                    byvar = yivi[,input$subvar]))
+                    byvar = yivi[,input$subvar], hakn = T))
   })
   
   # ---------------------- Het (meta-regression) ------------------------
@@ -633,7 +633,7 @@ shinyServer(function(input, output, session) {
     }
     
     rma(yi = ES, vi = (SE)^2, mods = as.formula(mo),
-        data = yivi, method = input$HetEstimator)
+        data = yivi, method = input$HetEstimator, test="knha")
   })
   
   
@@ -676,7 +676,7 @@ shinyServer(function(input, output, session) {
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
                    method.tau = input$HetEstimator,
-                   byvar = yivi[,input$dis.forest])
+                   byvar = yivi[,input$dis.forest], hakn = T)
     
     if (input$ShowFixWeight == T & input$ShowRandWeight == T) {
       right_cols = c("effect", "ci", "w.fixed", "w.random")
@@ -752,7 +752,7 @@ shinyServer(function(input, output, session) {
     Cont = yivi[,lab]
     
     res <- rma(yi = ES, vi = SE^2, mods = ~Cont, data = yivi,
-               method = input$HetEstimator)
+               method = input$HetEstimator, test="knha")
     
     Size = 1/(yivi[,"SE"])^2
     yfit = Cont*res$b[2]+res$b[1]
@@ -877,7 +877,7 @@ shinyServer(function(input, output, session) {
         
         mod <- metagen(TE = ES, seTE = SE, data = yivi, comb.fixed = F,
                        method.tau = input$HetEstimator,
-                       byvar = yivi[,lab[[j]]])
+                       byvar = yivi[,lab[[j]]], hakn = T)
         
         tem = aggregate(yivi$ni, by = list(gro=yivi[,lab[[j]]]), FUN = sum)
         temp = tem
@@ -1160,7 +1160,7 @@ shinyServer(function(input, output, session) {
     # if (is.null(yivi)) { stop("No data submitted.") }
     
     res <- rma(yi = ES, vi = SE^2, ni = True.No.C+No.T,
-               data = yivi, method = input$HetEstimator)
+               data = yivi, method = input$HetEstimator, test="knha")
     trimfill(res, estimator = "L0", side = input$TafSide)
   })
   
@@ -1174,7 +1174,7 @@ shinyServer(function(input, output, session) {
     
     
     res <- rma(yi = ES, vi = SE^2, ni = True.No.C+No.T,
-               data = yivi, method = input$HetEstimator)
+               data = yivi, method = input$HetEstimator, test="knha")
     taf <- trimfill(res, estimator="L0", side = input$TafSide)
     
     xmin = min(min(taf$yi)-0.1*(max(taf$yi)-min(taf$yi)), 0)
