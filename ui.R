@@ -6,6 +6,8 @@
 
 library(shiny)
 library(metafor)
+install.packages("devtools")
+devtools::install_github("guido-s/meta")
 library(meta)
 library(shinythemes)
 library(dplyr)

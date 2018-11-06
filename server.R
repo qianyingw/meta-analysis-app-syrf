@@ -6,6 +6,8 @@
 
 library(shiny)
 library(metafor)
+install.packages("devtools")
+devtools::install_github("guido-s/meta")
 library(meta)
 library(shinythemes)
 library(dplyr)
@@ -471,7 +473,8 @@ shinyServer(function(input, output, session) {
     # summary(metagen(Effect.Size, Standard.Error, data=yv, method.tau=input$meth))
     # summary(metagen(TE = ES, seTE = SE, data=yivi, method.tau="REML"))
     summary(metagen(TE = ES, seTE = SE, data = yivi,
-                    method.tau = input$HetEstimator, hakn = T))
+                    method.tau = input$HetEstimator, hakn = T,
+                    control=list(maxiter=100000,stepadj=.5)))
   })
   
   # ----------------- Forest plot ----------------------
@@ -482,7 +485,8 @@ shinyServer(function(input, output, session) {
     # if (is.null(yivi)) { stop("No data submitted.") }
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
-                   method.tau = input$HetEstimator, comb.fixed = F, hakn = T)
+                   method.tau = input$HetEstimator, comb.fixed = F, hakn = T,
+                   control=list(maxiter=100000,stepadj=.5))
     
     if (input$ForOrder == "") { sortlab = NULL }
     if (input$ForOrder == "ine") { sortlab = res$TE }
@@ -599,7 +603,8 @@ shinyServer(function(input, output, session) {
     
     summary(metagen(TE = ES, seTE = SE, data = yivi,
                     method.tau = input$HetEstimator,
-                    byvar = yivi[,input$subvar], hakn = T))
+                    byvar = yivi[,input$subvar], hakn = T, 
+                    control=list(maxiter=100000,stepadj=.5)))
   })
   
   # ---------------------- Het (meta-regression) ------------------------
@@ -676,7 +681,8 @@ shinyServer(function(input, output, session) {
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
                    method.tau = input$HetEstimator,
-                   byvar = yivi[,input$dis.forest], hakn = T)
+                   byvar = yivi[,input$dis.forest], hakn = T,
+                   control=list(maxiter=100000,stepadj=.5))
     
     if (input$ShowFixWeight == T & input$ShowRandWeight == T) {
       right_cols = c("effect", "ci", "w.fixed", "w.random")
@@ -877,7 +883,8 @@ shinyServer(function(input, output, session) {
         
         mod <- metagen(TE = ES, seTE = SE, data = yivi, comb.fixed = F,
                        method.tau = input$HetEstimator,
-                       byvar = yivi[,lab[[j]]], hakn = T)
+                       byvar = yivi[,lab[[j]]], hakn = T,
+                       control=list(maxiter=100000,stepadj=.5))
         
         tem = aggregate(yivi$ni, by = list(gro=yivi[,lab[[j]]]), FUN = sum)
         temp = tem
@@ -1087,7 +1094,8 @@ shinyServer(function(input, output, session) {
       
       mod <- metagen(TE = ES, seTE = SE, data = yivi, comb.fixed = F,
                      method.tau = input$HetEstimator,
-                     byvar = yivi[,lab])
+                     byvar = yivi[,lab],
+                     control=list(maxiter=100000,stepadj=.5))
       
       tem = aggregate(yivi$ni, by = list(gro=yivi[,lab]), FUN = sum)
       temp = tem
