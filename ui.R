@@ -59,7 +59,12 @@ shinyUI(fluidPage(
                                  "Empirical Bayes" = "EB"),
                   selected = "REML"),
       
-      
+      hr(),
+      checkboxInput(inputId = "KnHaTest", label = "Fit with Knapp and Hartung method", value = F),
+      # radioButtons(inputId = "KnHaTest", label = "Fit with Knapp and Hartung method",
+      #              choices = list("Yes" = T, 
+      #                             "No" = F),
+      #              selected = F),
       
       hr(),
       uiOutput("CheckVar")

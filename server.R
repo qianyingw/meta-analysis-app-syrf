@@ -1,4 +1,3 @@
-# Meta (GET)
 # This is a Shiny web application for meta-analysis in SyRF
 # by Qianying Wang @CAMARADES
 # server.R
@@ -473,7 +472,7 @@ shinyServer(function(input, output, session) {
     # summary(metagen(Effect.Size, Standard.Error, data=yv, method.tau=input$meth))
     # summary(metagen(TE = ES, seTE = SE, data=yivi, method.tau="REML"))
     summary(metagen(TE = ES, seTE = SE, data = yivi,
-                    method.tau = input$HetEstimator, hakn = T,
+                    method.tau = input$HetEstimator, hakn = input$KnHaTest,
                     control=list(maxiter=100000,stepadj=.5)))
   })
   
@@ -485,7 +484,7 @@ shinyServer(function(input, output, session) {
     # if (is.null(yivi)) { stop("No data submitted.") }
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
-                   method.tau = input$HetEstimator, comb.fixed = F, hakn = T,
+                   method.tau = input$HetEstimator, comb.fixed = F, hakn = input$KnHaTest,
                    control=list(maxiter=100000,stepadj=.5))
     
     if (input$ForOrder == "") { sortlab = NULL }
@@ -603,7 +602,7 @@ shinyServer(function(input, output, session) {
     
     summary(metagen(TE = ES, seTE = SE, data = yivi,
                     method.tau = input$HetEstimator,
-                    byvar = yivi[,input$subvar], hakn = T, 
+                    byvar = yivi[,input$subvar], hakn = input$KnHaTest, 
                     control=list(maxiter=100000,stepadj=.5)))
   })
   
@@ -618,6 +617,9 @@ shinyServer(function(input, output, session) {
       #      Please select nested data in the first tab.")
       yivi <- record()
     }
+    
+    khtest = "z"
+    if (input$KnHaTest == T) { khtest = "knha"} 
     
     dlab = input$dbox   # discrete variables selected
     clab = input$cbox   # continuous variables selected
@@ -638,7 +640,7 @@ shinyServer(function(input, output, session) {
     }
     
     rma(yi = ES, vi = (SE)^2, mods = as.formula(mo),
-        data = yivi, method = input$HetEstimator, test="knha")
+        data = yivi, method = input$HetEstimator, test=khtest)
   })
   
   
@@ -681,7 +683,7 @@ shinyServer(function(input, output, session) {
     
     res <- metagen(TE = ES, seTE = SE, data = yivi,
                    method.tau = input$HetEstimator,
-                   byvar = yivi[,input$dis.forest], hakn = T,
+                   byvar = yivi[,input$dis.forest], hakn = input$KnHaTest,
                    control=list(maxiter=100000,stepadj=.5))
     
     if (input$ShowFixWeight == T & input$ShowRandWeight == T) {
@@ -757,8 +759,11 @@ shinyServer(function(input, output, session) {
     lab = input$con.regplot          # Name of the continuous variable
     Cont = yivi[,lab]
     
+    khtest = "z"
+    if (input$KnHaTest == T) { khtest = "knha"}
+    
     res <- rma(yi = ES, vi = SE^2, mods = ~Cont, data = yivi,
-               method = input$HetEstimator, test="knha")
+               method = input$HetEstimator, test=khtest)
     
     Size = 1/(yivi[,"SE"])^2
     yfit = Cont*res$b[2]+res$b[1]
@@ -883,7 +888,7 @@ shinyServer(function(input, output, session) {
         
         mod <- metagen(TE = ES, seTE = SE, data = yivi, comb.fixed = F,
                        method.tau = input$HetEstimator,
-                       byvar = yivi[,lab[[j]]], hakn = T,
+                       byvar = yivi[,lab[[j]]], hakn = input$KnHaTest,
                        control=list(maxiter=100000,stepadj=.5))
         
         tem = aggregate(yivi$ni, by = list(gro=yivi[,lab[[j]]]), FUN = sum)
@@ -966,6 +971,9 @@ shinyServer(function(input, output, session) {
     # meta-regression bar plot
     if (input$HetMethod == "reg"){
       
+      khtest = "z"
+      if (input$KnHaTest == T) {khtest = "knha"}
+      
       plots <- list()  # new plots list
       for (j in 1:nbar){
         
@@ -975,9 +983,9 @@ shinyServer(function(input, output, session) {
         
         # Do meta-regression
         res <- rma(yi = ES, vi = SE^2, mods = ~factor(yivi[,lab[[j]]])-1,
-                   data = yivi, method = input$HetEstimator)
+                   data = yivi, method = input$HetEstimator, test=khtest)
         glob <- rma(yi = ES, vi = SE^2, data = yivi,
-                    method = input$HetEstimator)
+                    method = input$HetEstimator, test=khtest)
         
         lev = rownames(res$b) # names for all the levels of one variable
         tem = aggregate(yivi$ni, by = list(gro=yivi[,lab[[j]]]), FUN = sum)
@@ -1093,7 +1101,7 @@ shinyServer(function(input, output, session) {
     if (input$HetMethod == "sub"){
       
       mod <- metagen(TE = ES, seTE = SE, data = yivi, comb.fixed = F,
-                     method.tau = input$HetEstimator,
+                     method.tau = input$HetEstimator, hakn = input$KnHaTest,
                      byvar = yivi[,lab],
                      control=list(maxiter=100000,stepadj=.5))
       
@@ -1126,13 +1134,15 @@ shinyServer(function(input, output, session) {
     # meta-regression bar info
     if (input$HetMethod == "reg"){
       
+      khtest = "z"
+      if (input$KnHaTest == T) { khtest="knha"}
       # Split into subgroups
       mylist <- split(yivi, yivi[,lab], drop = T)
       # Do meta-regression
       res <- rma(yi = ES, vi = SE^2, mods = ~factor(yivi[,lab])-1,
-                 data = yivi, method = input$HetEstimator)
+                 data = yivi, method = input$HetEstimator, test = khtest)
       glob <- rma(yi = ES, vi = SE^2, data = yivi,
-                  method = input$HetEstimator)
+                  method = input$HetEstimator, test = khtest)
       
       lev = rownames(res$b) # names for all the levels of one variable
       
@@ -1166,9 +1176,11 @@ shinyServer(function(input, output, session) {
       # yivi <- nest() 
     }
     # if (is.null(yivi)) { stop("No data submitted.") }
+    khtest = "z"
+    if (input$KnHaTest==T) {khtest = "knha"}
     
     res <- rma(yi = ES, vi = SE^2, ni = True.No.C+No.T,
-               data = yivi, method = input$HetEstimator, test="knha")
+               data = yivi, method = input$HetEstimator, test=khtest)
     trimfill(res, estimator = "L0", side = input$TafSide)
   })
   
@@ -1179,10 +1191,11 @@ shinyServer(function(input, output, session) {
     if (input$DataType == "pre") { yivi <- record() }
     if (input$DataType == "nest") { stop() }
     # if (is.null(yivi)) { stop("No data submitted.") }
-    
+    khtest = "z"
+    if (input$KnHaTest==T) {khtest = "knha"}
     
     res <- rma(yi = ES, vi = SE^2, ni = True.No.C+No.T,
-               data = yivi, method = input$HetEstimator, test="knha")
+               data = yivi, method = input$HetEstimator, test=khtest)
     taf <- trimfill(res, estimator="L0", side = input$TafSide)
     
     xmin = min(min(taf$yi)-0.1*(max(taf$yi)-min(taf$yi)), 0)
