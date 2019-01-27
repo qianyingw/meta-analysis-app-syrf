@@ -135,7 +135,7 @@ shinyUI(fluidPage(
                               ),
                               
                               sliderInput(inputId = "GapRight", label = "Right gap", min = 0, max = 10, value = 1),
-                              sliderInput(inputId = "ForWinHeight", label = "Figure height (px)", min = 300, max = 2000, value = 400),
+                              sliderInput(inputId = "ForWinHeight", label = "Figure height (px)", min = 300, max = 6000, value = 400),
                               
                               HTML("<br><br>"),
                               
@@ -204,7 +204,7 @@ shinyUI(fluidPage(
                                                ),
                                                
                                                sliderInput(inputId = "SubGapRight", label = "Right gap", min = 0, max = 10, value = 1),
-                                               sliderInput(inputId = "SubWinHeight", label = "Height (px)", min = 400, max = 2000, value = 400),
+                                               sliderInput(inputId = "SubWinHeight", label = "Height (px)", min = 400, max = 6000, value = 400),
                                                HTML("<br><br>"),
                                                fluidRow(
                                                  column(3,

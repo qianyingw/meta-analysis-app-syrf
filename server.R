@@ -107,7 +107,7 @@ shinyServer(function(input, output, session) {
               df$di[df$di==0] = 0.5
               
               df[,"ES"] = log(df[,"ai"]*df[,"di"]/(df[,"bi"]*df[,"ci"]))
-              df[,"SE"] = 1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"]
+              df[,"SE"] = sqrt(1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"])
               
               df[,"Mean.S"] = df[,"Mean.C"] = df[,"Mean.T"]= rep(NA,nr)
               df[,"SD.C"] = df[,"SD.T"] = rep(NA,nr)
@@ -189,7 +189,8 @@ shinyServer(function(input, output, session) {
               df$di[df$di==0] = 0.5
               
               df[,"ES"] = log(df[,"ai"]*df[,"di"]/(df[,"bi"]*df[,"ci"]))
-              df[,"SE"] = 1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"]
+              # df[,"SE"] = 1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"]
+              df[,"SE"] = sqrt(1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"])
               
               df[,"Mean.S"] = df[,"Mean.C"] = df[,"Mean.T"]= rep(NA,nr)
               df[,"SD.C"] = df[,"SD.T"] = rep(NA,nr)

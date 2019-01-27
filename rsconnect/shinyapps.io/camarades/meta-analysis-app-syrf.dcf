@@ -5,9 +5,9 @@ account: camarades
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 555434
-bundleId: 1684844
+bundleId: 1835200
 url: https://camarades.shinyapps.io/meta-analysis-app-syrf/
-when: 1541500437.28065
+when: 1548365948.70069
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: dat.RData|README.md
+ignoredFiles: .RData
