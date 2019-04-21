@@ -41,6 +41,7 @@ shinyServer(function(input, output, session) {
   record <- reactive({
     
     dat <- dataset()
+    dat <- dat[!apply(is.na(dat) | dat == "", 1, all),] # remove na or empty rows
     dat[dat[,"GreaterIsWorse"]=="TRUE", "GreaterIsWorse"]=1
     dat[dat[,"GreaterIsWorse"]==0, "GreaterIsWorse"]=-1
     
@@ -251,62 +252,100 @@ shinyServer(function(input, output, session) {
   
   
   # ----------------- Nest variables ---------------------------------
-  NestVar <- reactive({
+  # NestVar <- reactive({
+  #   
+  #   pre = record()
+  #   pre[, "ch.s"] = paste0(pre[,"ch.s"], pre[,"ch.c"], pre[,"ch.t"])
+  #   pre = pre[, !(colnames(pre) %in% c("ch.c", "ch.t"))]
+  #   
+  #   flag = matrix(0, nrow = 1, ncol = ncol(pre)-17)
+  #   colnames(flag) = colnames(pre[,18:ncol(pre)])
+  #   flag = data.frame(flag)
+  #   
+  #   corlist = split(pre, pre[,"ch.s"], drop = T)
+  #   for (i in 1:length(corlist)){
+  #     temp = corlist[[i]]
+  #     nc = ncol(temp)-17
+  #     for (j in 1:nc){
+  #       if (length(unique(temp[,j+17])) > 1) {
+  #         flag[colnames(temp)[j+17]] = 1
+  #       }
+  #     }
+  #   }
+  #   
+  #   NestVar = colnames(flag)[flag==1]
+  #   return(NestVar)
+  #   
+  # })
+  
+  # ------------------- Nested variables --------------------
+  output$NestVar <- renderUI({
     
-    pre = record()
-    pre[, "ch.s"] = paste0(pre[,"ch.s"], pre[,"ch.c"], pre[,"ch.t"])
-    pre = pre[, !(colnames(pre) %in% c("ch.c", "ch.t"))]
+    # if (input$DataType == "pre") { 
+    #   dat <- record()
+    #   use <- names(dat)[20:ncol(dat)]
+    # }
+    # if (input$DataType == "nest") {
+    #   dat <- nest()
+    #   use <- names(dat)[7:ncol(dat)]
+    # }
     
-    flag = matrix(0, nrow = 1, ncol = ncol(pre)-17)
-    colnames(flag) = colnames(pre[,18:ncol(pre)])
-    flag = data.frame(flag)
-    
-    corlist = split(pre, pre[,"ch.s"], drop = T)
-    for (i in 1:length(corlist)){
-      temp = corlist[[i]]
-      nc = ncol(temp)-17
-      for (j in 1:nc){
-        if (length(unique(temp[,j+17])) > 1) {
-          flag[colnames(temp)[j+17]] = 1
-        }
-      }
-    }
-    
-    NestVar = colnames(flag)[flag==1]
-    return(NestVar)
+    dat <- record()
+    use <- names(dat)[7:ncol(dat)]
+    selectInput(inputId = "nest_var", label = "Nested variables",
+                choices = as.list(use), multiple = T, selectize = F) 
     
   })
   
-  # ----------------- Nest way ---------------------------------
-  output$NestWay <- renderUI({
-    
-    nest_name = NestVar()
-    fluidRow(
-      lapply(1:length(nest_name), function(i) {
-        column(3,
-               selectInput(inputId = paste0("nest_",i), label = nest_name[i],
-                           choices = list("First" = "1st",
-                                          "Last" = "last",
-                                          "Count" = "count",
-                                          "Sum" = "sum",
-                                          "Average" = "mean",
-                                          "Minimum" = "min",
-                                          "Maximum" = "max",
-                                          "Variance" = "var",
-                                          "Standard deviation" = "sd",
-                                          "Standard error" = "se"
-                           ),
-                           multiple = F, selected = "1st")
-        ) # column
-      }) # lapply(1:length(nest_name), function(i)
-    ) # fluidRow
-    
-  })
+  # # ----------------- Nest way ---------------------------------
+  # output$NestWay <- renderUI({
+  #   
+  #   nest_name = NestVar()
+  #   fluidRow(
+  #     lapply(1:length(nest_name), function(i) {
+  #       column(3,
+  #              selectInput(inputId = paste0("nest_",i), label = nest_name[i],
+  #                          choices = list("First" = "1st",
+  #                                         "Last" = "last",
+  #                                         "Count" = "count",
+  #                                         "Sum" = "sum",
+  #                                         "Average" = "mean",
+  #                                         "Minimum" = "min",
+  #                                         "Maximum" = "max",
+  #                                         "Variance" = "var",
+  #                                         "Standard deviation" = "sd",
+  #                                         "Standard error" = "se"
+  #                          ),
+  #                          multiple = F, selected = "1st")
+  #       ) # column
+  #     }) # lapply(1:length(nest_name), function(i)
+  #   ) # fluidRow
+  #   
+  # })
   
   # ----------------- Nest ---------------------------------
   nest <- reactive({
     
     pre = record()
+    
+    nest_name = NestVar()
+    
+    nest_name
+
+    ad <- group_by(pre, nest_name)
+    drugnested<- summarise(ad,
+                           NoC=min(NoC),
+                           NoT=min(NoT),
+                           N=min(N),
+                           Weightnested=sum(weight),
+                           WeightQinested= sum(weightQI),
+                           TrueNoC=min(TrueNoC),
+                           Qpi=WeightQinested/ Weightnested,
+                           SEQi=1/sqrt(Weightnested),
+                           LowerCI=Qpi-(1.959963985*SEQi),
+                           UpperCI= Qpi+(1.959963985*SEQi)
+    )
+    
     pre[, "ch.s"] = paste0(pre[,"ch.s"], pre[,"ch.c"], pre[,"ch.t"])
     pre = pre[, !(colnames(pre) %in% c("ch.c", "ch.t"))]
     
@@ -337,46 +376,7 @@ shinyServer(function(input, output, session) {
         df[,"SE"] = sqrt(nrow(temp)/sum(wi))
         
         
-        for (r in 1:length(rest_name)) {
-          df[,rest_name[r]] = temp[1,rest_name[r]]
-        }
-        
-        for (k in 1:length(nest_name)) {
-          
-          nest_way = input[[paste0("nest_", k)]]
-          
-          if (nest_way == "1st") {
-            df[,nest_name[k]] = temp[1,nest_name[k]]
-          }
-          if (nest_way == "last") {
-            df[,nest_name[k]] = temp[nrow(temp),nest_name[k]]
-          }
-          if (nest_way == "count") {
-            df[,nest_name[k]] = nrow(temp)
-          }
-          if (nest_way == "sum") {
-            df[,nest_name[k]] = sum(temp[,nest_name[k]], na.rm = T)
-          }
-          if (nest_way == "mean") {
-            df[,nest_name[k]] = mean(temp[,nest_name[k]], na.rm = T)
-          }
-          if (nest_way == "min") {
-            df[,nest_name[k]] = min(temp[,nest_name[k]], na.rm = T)
-          }
-          if (nest_way == "max") {
-            df[,nest_name[k]] = max(temp[,nest_name[k]], na.rm = T)
-          }
-          if (nest_way == "var") {
-            df[,nest_name[k]] = var(temp[,nest_name[k]], na.rm = T)
-          }
-          if (nest_way == "sd") {
-            df[,nest_name[k]] = sd(temp[,nest_name[k]], na.rm = T)
-          }
-          if (nest_way == "se") {
-            df[,nest_name[k]] = sd(temp[,nest_name[k]], na.rm = T)/sqrt(nrow(temp))
-          }
-        } # for (k in 1:length(nest_name))
-        
+
         nest = rbind(nest, df)
         
       } # for (j in 1:length(UniOutID))
@@ -385,6 +385,87 @@ shinyServer(function(input, output, session) {
     return(nest)
     
   })
+  # nest <- reactive({
+  #   
+  #   pre = record()
+  #   pre[, "ch.s"] = paste0(pre[,"ch.s"], pre[,"ch.c"], pre[,"ch.t"])
+  #   pre = pre[, !(colnames(pre) %in% c("ch.c", "ch.t"))]
+  #   
+  #   nest = c()
+  #   corlist <- split(pre, pre[,"ch.s"], drop = T)
+  #   
+  #   nest_name = NestVar()
+  #   all_name = colnames(pre[,20:ncol(pre)])
+  #   rest_name = all_name[!(all_name %in% nest_name)]
+  #   
+  #   for (i in 1:length(corlist)) {
+  #     temp = corlist[[i]] # i-th cohort group
+  #     UniOutID = as.character(unique(temp[,"OutcomeId"]))
+  #     for (j in 1:length(UniOutID)){
+  #       out = temp[temp[,"OutcomeId"] %in% UniOutID[j],] # in i-th Cohort group with same j-th OutcomeId
+  #       df = data.frame(matrix(nrow = 1, ncol = 6+ncol(pre)-17), stringsAsFactors = F)
+  #       colnames(df) = c("Author", "Year", "True.No.C", "No.T", "ES","SE",
+  #                        colnames(pre[,18:ncol(pre)]))
+  #       
+  #       df[1,"Author"] = as.character(temp[1,"Author"])
+  #       df[1,"Year"] = temp[1,"Year"]
+  #       df[1,"True.No.C"] = temp[1,"True.No.C"]
+  #       df[1,"No.T"] = temp[1,"No.T"]
+  #       
+  #       yi = temp[,"ES"]
+  #       wi = 1/(temp[,"SE"]^2)
+  #       df[,"ES"] = sum(yi*wi)/sum(wi)
+  #       df[,"SE"] = sqrt(nrow(temp)/sum(wi))
+  #       
+  #       
+  #       for (r in 1:length(rest_name)) {
+  #         df[,rest_name[r]] = temp[1,rest_name[r]]
+  #       }
+  #       
+  #       for (k in 1:length(nest_name)) {
+  #         
+  #         nest_way = input[[paste0("nest_", k)]]
+  #         
+  #         if (nest_way == "1st") {
+  #           df[,nest_name[k]] = temp[1,nest_name[k]]
+  #         }
+  #         if (nest_way == "last") {
+  #           df[,nest_name[k]] = temp[nrow(temp),nest_name[k]]
+  #         }
+  #         if (nest_way == "count") {
+  #           df[,nest_name[k]] = nrow(temp)
+  #         }
+  #         if (nest_way == "sum") {
+  #           df[,nest_name[k]] = sum(temp[,nest_name[k]], na.rm = T)
+  #         }
+  #         if (nest_way == "mean") {
+  #           df[,nest_name[k]] = mean(temp[,nest_name[k]], na.rm = T)
+  #         }
+  #         if (nest_way == "min") {
+  #           df[,nest_name[k]] = min(temp[,nest_name[k]], na.rm = T)
+  #         }
+  #         if (nest_way == "max") {
+  #           df[,nest_name[k]] = max(temp[,nest_name[k]], na.rm = T)
+  #         }
+  #         if (nest_way == "var") {
+  #           df[,nest_name[k]] = var(temp[,nest_name[k]], na.rm = T)
+  #         }
+  #         if (nest_way == "sd") {
+  #           df[,nest_name[k]] = sd(temp[,nest_name[k]], na.rm = T)
+  #         }
+  #         if (nest_way == "se") {
+  #           df[,nest_name[k]] = sd(temp[,nest_name[k]], na.rm = T)/sqrt(nrow(temp))
+  #         }
+  #       } # for (k in 1:length(nest_name))
+  #       
+  #       nest = rbind(nest, df)
+  #       
+  #     } # for (j in 1:length(UniOutID))
+  #   } # for (i in 1:length(corlist))
+  #   
+  #   return(nest)
+  #   
+  # })
   
   
   # ----------------- DT ----------------------
