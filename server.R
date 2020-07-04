@@ -3,8 +3,14 @@
 # server.R
 # https://camarades.shinyapps.io/meta-analysis-syrf/
 
+
 library(shiny)
 library(metafor)
+library(devtools)
+# devtools::install_version("htmltools", version = "0.3.6", repos = "http://cran.us.r-project.org")
+
+library(htmltools)
+
 # install.packages("devtools")
 # devtools::install_github("guido-s/meta")
 library(meta)
@@ -14,6 +20,7 @@ library(plotly)
 library(RCurl)
 library(ggplot2)
 library(colourpicker)
+library(DT)
 
 
 shinyServer(function(input, output, session) {
@@ -34,7 +41,7 @@ shinyServer(function(input, output, session) {
     if (is.null(inFile)) { stop() }
     dataset <- read.csv(inFile$datapath, header = T, row.names = NULL)
     # dataset <- na.omit(dataset)
-    # dataset <- read.csv("D:/shinyapp/datafile/Infarct.csv", header=T)
+    # dataset <- read.csv("for_shinnyapp.csv", header=T)
   })
   
   # ------------------ Record: yi & vi --------------------
@@ -66,6 +73,7 @@ shinyServer(function(input, output, session) {
         stem = out[(out[,"ModelType"] %in% "model control") & (out[,"InterventionType"] %in% "intervention control"), ]
         ctem = out[(out[,"ModelType"] %in% "model") & (out[,"InterventionType"] %in% "intervention control"), ]
         ttem = out[(out[,"ModelType"] %in% "model") & (out[,"InterventionType"] %in% "intervention"), ]
+
         
         # --------------------- SC -----------------
         if (type == "SC"){
@@ -89,10 +97,10 @@ shinyServer(function(input, output, session) {
             df[,"Author"] = crec$Author
             df[,"Year"] = crec$Year
             df[,"OutcomeId"] = crec$OutcomeId
-            df[,"ch.s"] = rep(NA, nr)
-            df[,"ch.c"] = rep(srec$CohortId, nr)  # sham -> control
+            df[,"ch.s"] = NA #rep(NA, nr)
+            df[,"ch.c"] = srec$CohortId # rep(srec$CohortId, nr)  # sham -> control
             df[,"ch.t"] = crec$CohortId           # control -> treatment
-            df[,"True.No.C"] = rep(srec$NumberOfAnimals/nr, nr)
+            df[,"True.No.C"] = srec$NumberOfAnimals/nr # rep(srec$NumberOfAnimals/nr, nr)
             df[,"No.T"] = crec$NumberOfAnimals
             df[,(fix+2):ncol(df)] = crec[,(fix+1):ncol(crec)]
             
@@ -102,28 +110,37 @@ shinyServer(function(input, output, session) {
               df[,"bi"] = crec$NumberOfAnimals - df$ai # Number.in.Treatment.Group - ai
               df[,"ci"] = srec$OutcomeResult # Number.Affectd.by.Outcome.Measure.in.Control.Group
               df[,"di"] = srec$NumberOfAnimals - df$ci # Number.in.Control.Group - ci
-              df$ai[df$ai==0] = 0.5
-              df$bi[df$bi==0] = 0.5
-              df$ci[df$ci==0] = 0.5
-              df$di[df$di==0] = 0.5
+              
+              
+              df$ai[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              df$bi[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              df$ci[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              df$di[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+      
               
               df[,"ES"] = log(df[,"ai"]*df[,"di"]/(df[,"bi"]*df[,"ci"]))
               df[,"SE"] = sqrt(1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"])
               
-              df[,"Mean.S"] = df[,"Mean.C"] = df[,"Mean.T"]= rep(NA,nr)
-              df[,"SD.C"] = df[,"SD.T"] = rep(NA,nr)
+              df[,"Mean.S"] = df[,"Mean.C"] = df[,"Mean.T"]= NA # rep(NA,nr)
+              df[,"SD.C"] = df[,"SD.T"] = NA # rep(NA,nr)
               
             } else { # mea == "NMD" or "SMD"
               
-              df[,"Mean.S"] = rep(NA,nr)
-              df[,"Mean.C"] = rep(srec$OutcomeResult, nr)
-              df[,"Mean.T"]= crec$OutcomeResult
+              # df[,"Mean.S"] = rep(NA,nr)
+              # df[,"Mean.C"] = rep(srec$OutcomeResult, nr)
+              # df[,"Mean.T"]= crec$OutcomeResult
+              
+              df$Mean.S = NA
+              df$Mean.C = srec$OutcomeResult
+              df$Mean.T = crec$OutcomeResult
               
               if ( srec$ErrorType == "sd") {
-                df[,"SD.C"] = rep(srec$OutcomeError, nr)
+                df$SD.C = srec$OutcomeError  # df[,"SD.C"] = rep(srec$OutcomeError, nr)
               } else { # srec$ErrorType == "sem"
-                df[,"SD.C"] = rep(srec$OutcomeError*sqrt(srec$NumberOfAnimals), nr)
+                
+                df$SD.C = srec$OutcomeError*sqrt(srec$NumberOfAnimals)  # df[,"SD.C"] = rep(srec$OutcomeError*sqrt(srec$NumberOfAnimals), nr)
               } 
+              
               
               for (r in 1:nr) { 
                 if (crec$ErrorType[r] == "sd") {
@@ -170,11 +187,11 @@ shinyServer(function(input, output, session) {
             df[,"Author"] = trec$Author
             df[,"Year"] = trec$Year
             df[,"OutcomeId"] = crec$OutcomeId
-            if (nrow(stem) == 0) {df[,"ch.s"] = rep(NA, nr)}
-            if (nrow(stem) == 1) {df[,"ch.s"] = rep(stem$CohortId, nr)}
-            df[,"ch.c"] = rep(crec$CohortId, nr)  # sham -> control
+            if (nrow(stem) == 0) {df$ch.s = NA} # {df[,"ch.s"] = rep(NA, nr)}
+            if (nrow(stem) == 1) {df$ch.s = stem$CohortId} #rep(stem$CohortId, nr)}
+            df[,"ch.c"] = crec$CohortId # rep(crec$CohortId, nr)  # sham -> control
             df[,"ch.t"] = trec$CohortId           # control -> treatment
-            df[,"True.No.C"] = rep(crec$NumberOfAnimals/nr, nr)
+            df[,"True.No.C"] = crec$NumberOfAnimals/nr #rep(crec$NumberOfAnimals/nr, nr)
             df[,"No.T"] = trec$NumberOfAnimals
             df[,(fix+2):ncol(df)] = trec[,(fix+1):ncol(trec)]
             
@@ -184,40 +201,45 @@ shinyServer(function(input, output, session) {
               df[,"bi"] = trec$NumberOfAnimals - df$ai # Number.in.Treatment.Group - ai
               df[,"ci"] = crec$OutcomeResult # Number.Affectd.by.Outcome.Measure.in.Control.Group
               df[,"di"] = crec$NumberOfAnimals - df$ci # Number.in.Control.Group - ci
-              df$ai[df$ai==0] = 0.5
-              df$bi[df$bi==0] = 0.5
-              df$ci[df$ci==0] = 0.5
-              df$di[df$di==0] = 0.5
+              df$ai[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              df$bi[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              df$ci[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              df$di[df$ai==0 | df$bi==0 | df$ci==0 | df$di==0] = 0.5
+              
+              # df$ai[df$ai==0] = 0.5
+              # df$bi[df$bi==0] = 0.5
+              # df$ci[df$ci==0] = 0.5
+              # df$di[df$di==0] = 0.5
               
               df[,"ES"] = log(df[,"ai"]*df[,"di"]/(df[,"bi"]*df[,"ci"]))
               # df[,"SE"] = 1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"]
               df[,"SE"] = sqrt(1/df[,"ai"] + 1/df[,"bi"] + 1/df[,"ci"] + 1/df[,"di"])
               
-              df[,"Mean.S"] = df[,"Mean.C"] = df[,"Mean.T"]= rep(NA,nr)
-              df[,"SD.C"] = df[,"SD.T"] = rep(NA,nr)
+              df[,"Mean.S"] = df[,"Mean.C"] = df[,"Mean.T"]= NA  # rep(NA,nr)
+              df[,"SD.C"] = df[,"SD.T"] = NA  # rep(NA,nr)
               
             } else { # mea == "NMD" or "SMD"
               
               if (nrow(stem) == 0) {
                 df[,"Mean.S"] = NA
-                if (is.na(trec[,"InferredSham"])){
-                  df[,"Mean.S"] = rep(0, nr)
+                if (is.na(unique(trec[,"InferredSham"]))){
+                  df[,"Mean.S"] = 0 # rep(0, nr)
                 } else {
                   df[,"Mean.S"] = trec[,"InferredSham"]
                 }
               }
               if (nrow(stem) == 1) {
-                df[,"Mean.S"] = rep(stem$OutcomeResult, nr)
+                df[,"Mean.S"] = stem$OutcomeResult # rep(stem$OutcomeResult, nr)
                 df[is.na(df[,"Mean.S"]), "Mean.S"] = 0
               } 
               
-              df[,"Mean.C"] = rep(crec$OutcomeResult, nr)
+              df[,"Mean.C"] = crec$OutcomeResult  # rep(crec$OutcomeResult, nr)
               df[,"Mean.T"]= trec$OutcomeResult
               
               if (crec$ErrorType == "sd") {
-                df[,"SD.C"] = rep(crec$OutcomeError, nr)
+                df[,"SD.C"] = crec$OutcomeError # rep(crec$OutcomeError, nr)
               } else { # crec$ErrorType == "sem"
-                df[,"SD.C"] = rep(crec$OutcomeError*sqrt(crec$NumberOfAnimals), nr)
+                df[,"SD.C"] = crec$OutcomeError*sqrt(crec$NumberOfAnimals)  # rep(crec$OutcomeError*sqrt(crec$NumberOfAnimals), nr)
               } 
               for (r in 1:nr) { 
                 if (trec$ErrorType[r] == "sd") {
@@ -227,7 +249,7 @@ shinyServer(function(input, output, session) {
                 }
               } 
               
-              df[,"ai"] = df[,"bi"] = df[,"ci"] = df[,"di"] = rep(NA,nr)
+              df[,"ai"] = df[,"bi"] = df[,"ci"] = df[,"di"] = NA  # rep(NA,nr)
               
               if (mea == "NMD") {
                 df[,"ES"] = 100*(df[,"Mean.C"] - df[,"Mean.T"]) / (df[,"Mean.C"] - df[,"Mean.S"])
@@ -469,7 +491,7 @@ shinyServer(function(input, output, session) {
   
   
   # ----------------- DT ----------------------
-  output$DT <- renderDataTable({
+  output$DT <- DT::renderDataTable({
     
     if (is.null(dataset())) { stop("No data submitted.") }
     

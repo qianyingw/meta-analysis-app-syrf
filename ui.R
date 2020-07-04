@@ -1,11 +1,14 @@
-# Meta (GET)
-# This is a Shiny web application for meta-analysis
+# This is a Shiny web application for meta-analysis in SyRF
 # by Qianying Wang @CAMARADES
 # ui.R
-# https://qianying.shinyapps.io/Meta/
+# https://camarades.shinyapps.io/meta-analysis-syrf/
 
 library(shiny)
 library(metafor)
+library(devtools)
+# devtools::install_version("htmltools", version = "0.3.6", repos = "http://cran.us.r-project.org")
+library(htmltools)
+
 # install.packages("devtools")
 # devtools::install_github("guido-s/meta")
 library(meta)
@@ -92,12 +95,12 @@ shinyUI(fluidPage(
                    ),
                    conditionalPanel(condition = "input.DataType == 'nest'",
                                     wellPanel(
-                                      helpText("Select nesting method for each variable below:"),
-                                      uiOutput("NestWay")
+                                      helpText("Select variables for data nesting:"),
+                                      uiOutput("NestVar")
                                     )
                    ),
                    HTML("<br><br><br>"),
-                   dataTableOutput("DT")
+                   DT::dataTableOutput("DT")
                  )
         ),
         
